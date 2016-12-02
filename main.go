@@ -45,7 +45,7 @@ func createSSHFilesAndDirectories(username string) (error) {
 
 	keys, err := FetchKeysForUser(username)
 	if err != nil {
-		fmt.Printf("ERROR: %s\n", err)
+		fmt.Printf("ERROR: Fetching Keys for User failed... %s\n", err)
 		os.Exit(1)
 	}
 
@@ -65,8 +65,8 @@ func createSSHFilesAndDirectories(username string) (error) {
 
 
 func addUser(username string) (error) {
-	adduser_command := "adduser"
-	adduser_args := []string{"-c", "'github user'", "-m"}
+	adduser_command := "useradd"
+	adduser_args := []string{"-c", "'github user'", "-m", username}
 
 	_, err := exec.Command(adduser_command, adduser_args...).Output()
 	if err != nil {
@@ -100,7 +100,31 @@ func FetchKeysForUser(username string) ([]*PublicKey, error) {
 
 
 func main() {
-	username := "daniellawrence"
+	// username := "daniellawrence"
+
+	numberArgs := len(os.Args)
+
+	if numberArgs == 1 {
+		fmt.Println("Usage: add-my-github-friends username [username ... username]\n")
+		fmt.Println("Add a github user and public on to your system, allowing them to login.")
+	}
+
+	currentUser, _ := user.Current()
+	if currentUser.Uid != "0" {
+		fmt.Println("root needed, as we add users to the local system")
+		os.Exit(1)
+	}
+
+	for _, value := range os.Args[1:] {
+		fmt.Printf("Adding GitHub user '%s'\n", value)
+		addGitHubUser(value)
+	}
+	
+	os.Exit(0)
+}
+
+
+func addGitHubUser(username string) {
 
 	err := addUser(username)
 	if err != nil {
